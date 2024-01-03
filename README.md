@@ -66,8 +66,8 @@ https://IP:端口号/:端口号log      #键盘记录
 双击安装证书
 
 ```
-RemoteWebScreen.p12		#密码:RemoteWebScreen
-RemoteWebScreen.exe 	sha256:ce1f60c29574e0d6d23adfbe90b5bf97119d784c33894985aae1a8cafeba3291
-RemoteWebScreen.exe		md5:290d91b5f8b512738a62e0b2d5f0b0fa
+RemoteWebScreen.p12  #密码:RemoteWebScreen
+RemoteWebScreen.exe  sha256:ce1f60c29574e0d6d23adfbe90b5bf97119d784c33894985aae1a8cafeba3291
+RemoteWebScreen.exe  md5:290d91b5f8b512738a62e0b2d5f0b0fa
 ```
 
