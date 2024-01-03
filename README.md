@@ -70,4 +70,4 @@ RemoteWebScreen.p12  #密码:RemoteWebScreen
 RemoteWebScreen.exe  sha256:ce1f60c29574e0d6d23adfbe90b5bf97119d784c33894985aae1a8cafeba3291
 RemoteWebScreen.exe  md5:290d91b5f8b512738a62e0b2d5f0b0fa
 ```
-注：小技巧，缩放浏览器也可以调节画面清晰度。
+注：小技巧，缩放浏览器也可以调节画面清晰度。欢迎issues
