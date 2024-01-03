@@ -32,7 +32,7 @@ https://IP:端口号/:端口号log					  #键盘记录
 
 访问`https://IP:端口号/:端口号`
 
-![image-20231124095233832](resource/redme/image-20231124095233832.png)
+![image-20231124095233832](resource/image-20231124095233832.png)
 
 以上三处分别为，`切换到扩展屏`、`鼠标键盘控制`、`画质修改`。
 
@@ -40,7 +40,7 @@ https://IP:端口号/:端口号log					  #键盘记录
 
 可以直接通过模拟鼠标退出`火绒`。其他杀软未测试，针对`360`因为360有HOOK鼠标键盘操作所以不建议使用鼠标键盘控制，因为会失效。
 
-![image-20231124101731491](resource/redme/image-20231124101731491.png)
+![image-20231124101731491](resource/image-20231124101731491.png)
 
 ### 键盘记录
 
@@ -55,19 +55,19 @@ https://IP:端口号/:端口号log					  #键盘记录
 %tmp%/screen_log/2006_01_02_15_04_05_04.png					#注:截屏记录
 ```
 
-![image-20231124101333601](resource/redme/image-20231124101333601.png)
+![image-20231124101333601](resource/image-20231124101333601.png)
 
 通过上图可以记录到输入的账号密码，同时当用户打开密码本复制密码时，也能获取`Ctrl+c/v`，同时当用户进行复制和粘贴操作时会截一张图。
 
-![image-20231124101600198](resource/redme/image-20231124101600198.png)
+![image-20231124101600198](resource/image-20231124101600198.png)
 
 ## 安装证书
 
 双击安装证书
 
 ```
-RemoteWebScreen.p12			#密码:RemoteWebScreen
-RemoteWebScreen.exe 		sha256:ce1f60c29574e0d6d23adfbe90b5bf97119d784c33894985aae1a8cafeba3291
-RemoteWebScreen.exe			md5:290d91b5f8b512738a62e0b2d5f0b0fa
+RemoteWebScreen.p12		#密码:RemoteWebScreen
+RemoteWebScreen.exe 	sha256:ce1f60c29574e0d6d23adfbe90b5bf97119d784c33894985aae1a8cafeba3291
+RemoteWebScreen.exe		md5:290d91b5f8b512738a62e0b2d5f0b0fa
 ```
 
