@@ -22,8 +22,8 @@ RemoteWebScreen.exe [端口号] 					#默认443
 ```
 
 ```
-https://IP:端口号/:端口号						 #屏幕控制
-https://IP:端口号/:端口号log					  #键盘记录
+https://IP:端口号/:端口号      #屏幕控制
+https://IP:端口号/:端口号log      #键盘记录
 ```
 
 ### 屏幕控制
