@@ -52,7 +52,7 @@ https://IP:端口号/:端口号log      #键盘记录
 
 ```
 %tmp%/screen_log/templog.tmp								#注:键盘记录
-%tmp%/screen_log/2006_01_02_15_04_05_04.png					#注:截屏记录
+%tmp%/screen/2006_01_02_15_04_05_04.png					#注:截屏记录
 ```
 
 ![image-20231124101333601](image-20231124101333602.png)
