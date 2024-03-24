@@ -13,21 +13,21 @@ RemoteWebScreen/
 │   ├── screen.go           # 截图
 │   └── screenshotHandler.go# 屏幕共享逻辑
 │
-├── certs/              	# 证书
+├── certs/                  # 证书
 │   ├── cert.pem            # cert
-│   └── key.pem           	# key
+│   └── key.pem             # key
 │
 ├── static/                 # 前端静态文件
 │   └── pako.min.js         # 主HTML文件
 │
 ├── keyboard/               # 键盘记录相关模块
 │   ├── call_back.go        # 鼠标键盘回调函数
-│   ├── dump.go           	# 保存键盘记录以及剪切板截图操作
+│   ├── dump.go             # 保存键盘记录以及剪切板截图操作
 │   ├── Keyboard.go         # 启动键盘记录
-│   └── misc.go           	# 相关函数
+│   └── misc.go             # 相关函数
 │
 ├── win32/                  # 键盘记录相关配置
-│   ├── define.go         	# 键盘对应表
+│   ├── define.go           # 键盘对应表
 │   └── win32.go            # hook设置
 │
 ├── main.go                 # 应用程序的主入口点
@@ -44,6 +44,7 @@ RemoteWebScreen/
 4. **证书加密**：使用`https`和`wss`方式进行传输。
 5. **前端界面**：HTML/CSS/JavaScript 实现，用于显示远程屏幕和发送控制命令。
 
+扩展屏鼠标移动算法
 ```
 主屏分辨率<扩展屏的分辨率{
 	扩展屏的分辨率 := bounds.Dx() * (主屏分辨率 / (screen.W-bounds.Min.X))
@@ -66,7 +67,7 @@ netsh advfirewall set allprofiles state on   #开启
 ```
 
 ```
-RemoteWebScreen.exe start					  #默认443
+RemoteWebScreen.exe start	 #默认443
 RemoteWebScreen.exe start [端口号]
 ```
 
