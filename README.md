@@ -4,6 +4,54 @@
 
 本项目是一个远程控制应用，使用 Golang 开发，允许用户通过 Web 界面远程控制和屏幕监控其他计算机。主要功能包括屏幕共享、鼠标和键盘控制以及键盘记录。
 
+## 目录结构
+
+```
+RemoteWebScreen/
+├── server/                 # 服务器端代码
+│   ├── keymouevent.go      # WebSocket和鼠标和键盘通信逻辑
+│   ├── screen.go           # 截图
+│   └── screenshotHandler.go# 屏幕共享逻辑
+│
+├── certs/              	# 证书
+│   ├── cert.pem            # cert
+│   └── key.pem           	# key
+│
+├── static/                 # 前端静态文件
+│   └── pako.min.js         # 主HTML文件
+│
+├── keyboard/               # 键盘记录相关模块
+│   ├── call_back.go        # 鼠标键盘回调函数
+│   ├── dump.go           	# 保存键盘记录以及剪切板截图操作
+│   ├── Keyboard.go         # 启动键盘记录
+│   └── misc.go           	# 相关函数
+│
+├── win32/                  # 键盘记录相关配置
+│   ├── define.go         	# 键盘对应表
+│   └── win32.go            # hook设置
+│
+├── main.go                 # 应用程序的主入口点
+│
+├── index.html              # 前端代码
+│
+└── go.mod                  # Go模块定义
+```
+## 主要组件
+
+1. **WebSocket 通信**：使用 `github.com/gorilla/websocket` 包实现服务端和客户端之间的实时通信。
+2. **屏幕控制**：使用 `github.com/go-vgo/robotgo` 包进行鼠标键盘控制。
+3. **屏幕捕获**：`"github.com/kbinani/screenshot"`包进行屏幕捕获
+4. **证书加密**：使用`https`和`wss`方式进行传输。
+5. **前端界面**：HTML/CSS/JavaScript 实现，用于显示远程屏幕和发送控制命令。
+
+```
+主屏分辨率<扩展屏的分辨率{
+	扩展屏的分辨率 := bounds.Dx() * (主屏分辨率 / (screen.W-bounds.Min.X))
+}else{
+	扩展屏的分辨率 := 主屏分辨率 * bounds.Min.X+bounds.Dx() / screen.W
+}
+```
+
 ## 工具使用
 
 注：启动工具时，关闭一下防火墙。此工具基于正向连接，所以会在被控端启动端口。
@@ -18,7 +66,8 @@ netsh advfirewall set allprofiles state on   #开启
 ```
 
 ```
-RemoteWebScreen.exe [端口号]      #默认443
+RemoteWebScreen.exe start					  #默认443
+RemoteWebScreen.exe start [端口号]
 ```
 
 ```
