@@ -1,385 +1,670 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screen Monitor</title>
-</head>
-<style>
-    body, html {
-        margin: 0;
-        overflow: hidden;
-        height: 100%;
-    }
+    <title>RemoteWebScreen</title>
+    <link href="/static/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    #screenCanvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1; /* 设置较低的 z-index 使 canvas 在底层 */
-    }
+        body, html {
+            margin: 0;
+            overflow: hidden;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
 
-    .controls {
-        /*position: absolute;*/
-        /*top: 0;*/
-        /*right: 0;*/
-        /*z-index: 2; !* 设置较高的 z-index 使控制元素在 canvas 上层 *!*/
-        opacity: 0.6; /* 设置透明度 */
-        /*padding: 10px;*/
-        /*border-radius: 5px; !* 根据需要设置圆角 *!*/
-    }
+        #screenCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
 
-    .controls label,
-    .controls input {
-        display: block; /* 或者其他布局，取决于你的设计 */
-    }
-    .checkbox-container {
-        cursor: pointer;
-        font-size: 16px;
-        position: fixed; /* 固定位置 */
-        top: 0px;       /* 距离顶部的距离 */
-        right: 0px;      /* 距离左侧的距离 */
-        z-index: 1;   /* 高层级，确保在最上层 */
-        padding: 5px;
-        border-radius: 0; /* 无圆角 */
-    }
+        /* 顶部控制栏 */
+        .top-controls {
+            position: fixed;
+            top: 36px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(102,126,234,0.10);
+            border-radius: 22px;
+            padding: 8px 22px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 48px;
+        }
+        .top-controls.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
 
-    .checkbox-container input {
-        display: none;
-    }
+        /* 控制按钮样式 */
+        .switch-btn {
+            height: 36px;
+            min-width: 80px;
+            padding: 0 18px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .switch-btn:hover, .switch-btn:focus {
+            background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+            transform: scale(1.05);
+        }
 
-    .Contro-lbutton {
-        z-index: 1;
-        position: absolute;
-        top: 16px;
-        right: 0px;
-        width: 10px;
-        height: 10px;
-        border: 2px solid #ddd;
-        border-radius: 0; /* 无圆角 */
-        opacity:0.7;
-    }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 22px;
+            vertical-align: middle;
+        }
 
-    .checkbox-container input:checked ~ .Contro-lbutton:after {
-        display: block;
-    }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
-    .checkbox-container .Contro-lbutton:after {
-        content: "";
-        position: absolute;
-        display: none;
-        left: 0px;
-        top: 0px;
-        width: 6px;
-        height: 6px;
-        border: solid #f2f2f2;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #e0e0e0;
+            border-radius: 22px;
+            transition: background 0.2s;
+        }
 
-    /* 滑动条的通用样式 */
-    input[type=range] {
-        -webkit-appearance: none; /* 重置默认的样式 */
-        width: 100%; /* 完整宽度 */
-        height: 5px; /* 滑动条的高度 */
-        background: #ddd; /* 滑动条的背景色 */
-        outline: none; /* 移除轮廓 */
-        opacity: 0.7; /* 半透明 */
-        -webkit-transition: .2s; /* 过渡动画 */
-        transition: opacity .2s;
-    }
+        .slider:before {
+            position: absolute;
+            content: '';
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(102,126,234,0.10);
+            transition: 0.2s;
+        }
 
-    /* 滑动条内部滑块的样式 */
-    input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none; /* 重置默认的样式 */
-        appearance: none;
-        width: 11px; /* 滑块的宽度 */
-        height: 11px; /* 滑块的高度 */
-        background: #ddd; /* 滑块的背景色 */
-        cursor: pointer; /* 鼠标悬停时的光标样式 */
-        border-radius: 50%; /* 圆形滑块 */
-        border: 1px solid #333; /* 滑块的边框 */
-    }
+        .switch input:checked + .slider {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
 
-    input[type=range]::-moz-range-thumb {
-        width: 11px;
-        height: 11px;
-        background: #ddd;
-        cursor: pointer;
-        border-radius: 50%;
-        border: 1px solid #333;
-    }
+        .switch input:checked + .slider:before {
+            transform: translateX(16px);
+            background: #667eea;
+        }
 
-    /* 滑动条内部滑块的样式：焦点时 */
-    input[type=range]:focus::-webkit-slider-thumb {
-        background: #ddd;
-    }
+        .quality-label {
+            font-size: 15px;
+            color: #888;
+            margin: 0 2px;
+            font-weight: 500;
+        }
 
-    input[type=range]:focus::-moz-range-thumb {
-        background: #ddd;
-    }
-    .controls label {
-        font-family: 'Arial', sans-serif; /* 使用 Arial 字体，没有则回退到无衬线字体 */
-        font-size: 12px; /* 设置字体大小 */
-        color: #c3bebe; /* 设置字体颜色 */
-        margin-right: 10px; /* 设置标签右侧外边距，与滑动条间隔 */
-        display: inline-block; /* 设置为内联块元素，使其可以设置宽度和高度 */
-        vertical-align: middle; /* 垂直对齐 */
-        padding: 4px 0; /* 设置上下内边距 */
-    }
-    .controls {
-        margin-bottom: 20px; /* 为控件组添加底部外边距 */
-        padding: 10px; /* 设置内边距 */
-        border-radius: 5px; /* 设置圆角边框 */
-        width: auto; /* 宽度根据内容自动调整 */
-        box-sizing: border-box; /* 设置盒模型，避免内边距影响总宽度 */
-        top:150px;
-    }
-    .switch-button {
-        background-color: transparent; /* 设置背景为透明 */
-        border: 2px solid #d9d6d6; /* 边框颜色和宽度 */
-        color: #c3bebe; /* 文本颜色 */
-        padding: 3px 6px; /* 内边距 */
-        text-align: center; /* 文本居中 */
-        text-decoration: none; /* 无下划线 */
-        display: inline-block; /* 行内块元素 */
-        font-size: 8px; /* 字体大小 */
-        margin: 4px 2px; /* 外边距 */
-        transition-duration: 0.4s; /* 过渡效果持续时间 */
-        cursor: pointer; /* 鼠标指针形状 */
-    }
+        .quality-slider {
+            width: 90px;
+            height: 6px;
+            border-radius: 3px;
+            background: none !important;
+            vertical-align: middle;
+        }
 
-    .switch-button:hover {
-        background-color: #d9d6d6; /* 悬停时背景颜色 */
-        color: white; /* 悬停时文本颜色 */
-    }
+        .quality-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(102,126,234,0.18);
+            cursor: pointer;
+            margin-top: -5px;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
 
-    .top-center-controls {
-        position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        display: none; /* 初始隐藏 */
-        z-index: 1000; /* 确保在顶层 */
-        background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
-        padding: 10px;
-        border-radius: 0 0 5px 5px; /* 底部圆角 */
-        width: 26%;
-    }
-</style>
+        .quality-slider:focus::-webkit-slider-thumb,
+        .quality-slider:hover::-webkit-slider-thumb {
+            background: #764ba2;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+        }
+
+        .quality-slider::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--slider-bg, linear-gradient(90deg, #667eea 50%, #ddd 50%));
+        }
+
+        .quality-slider::-moz-range-thumb {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(102,126,234,0.18);
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        .quality-slider:focus::-moz-range-thumb,
+        .quality-slider:hover::-moz-range-thumb {
+            background: #764ba2;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+        }
+
+        .quality-slider::-moz-range-track {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--slider-bg, linear-gradient(90deg, #667eea 50%, #ddd 50%));
+        }
+
+        .quality-slider::-ms-thumb {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(102,126,234,0.18);
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        .quality-slider:focus::-ms-thumb,
+        .quality-slider:hover::-ms-thumb {
+            background: #764ba2;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+        }
+
+        .quality-slider::-ms-fill-lower {
+            background: #667eea;
+        }
+
+        .quality-slider::-ms-fill-upper {
+            background: #ddd;
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .top-controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            .quality-slider {
+                width: 120px;
+            }
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            min-width: 90px;
+            max-width: 180px;
+            background: rgba(51,51,51,0.95);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 12px;
+            position: absolute;
+            z-index: 10;
+            font-size: 13px;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -38px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 全屏按钮 */
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.18s, box-shadow 0.18s;
+            z-index: 1000;
+        }
+        .fullscreen-btn:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: scale(1.13);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.28);
+        }
+        .fullscreen-btn svg {
+            width: 26px;
+            height: 26px;
+            display: block;
+        }
+
+        /* 顶部热区 */
+        #topHotArea {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 360px; /* 建议与.top-controls宽度一致，如需更宽可调整 */
+            height: 60px;
+            z-index: 999;
+            background: transparent;
+            pointer-events: auto;
+        }
+        @media (max-width: 480px) {
+            #topHotArea { width: 98vw; }
+        }
+    </style>
 </head>
 <body>
-<div class="top-center-controls controls">
-    <label class="checkbox-container">
-        <input type="checkbox"  id="mouseControlCheckbox">
-        <span class="Contro-lbutton"></span>
-    </label>
-<!--  <label for="qualityRange">Quality:</label>-->
-    <button class="switch-button" id="switchScreenButton">切屏</button>
-    <input type="range" id="qualityRange" name="quality" min="1" max="100" value="56">
+    <!-- 状态指示器 -->
+    <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">连接中...</span>
+    </div>
 
-</div>
-<canvas id="screenCanvas"></canvas>
-<script src="/static/pako.min.js"></script>
-<script>
-    const canvas = document.getElementById('screenCanvas');
-    const ctx = canvas.getContext('2d');
-    const wsPort = {{ .WebSocketPort }};
-    const wsUrl = `wss://${window.location.hostname}:${wsPort}/SimulateDesktop`;
-    const ws = new WebSocket(wsUrl);
-    ws.binaryType = 'arraybuffer';
-    const switchScreenButton = document.getElementById('switchScreenButton');
-    const mouseControlCheckbox = document.getElementById('mouseControlCheckbox');
-    let isMouseControlEnabled = false;
-    let isMouseOverControls = false;
-    const controlsDiv = document.querySelector('.controls');
+    <!-- 顶部热区 -->
+    <div id="topHotArea"></div>
+    <div class="top-controls" id="topControls">
+        <div class="tooltip">
+            <button class="switch-btn" id="switchScreenButton" title="切换屏幕">切换屏幕</button>
+            <span class="tooltiptext">切换到其他显示器</span>
+        </div>
+        <div class="tooltip">
+            <label class="switch">
+                <input type="checkbox" id="mouseControlCheckbox">
+                <span class="slider"></span>
+            </label>
+            <span class="tooltiptext">启用/关闭鼠标键盘控制</span>
+        </div>
+        <span class="quality-label">画质</span>
+        <input type="range" id="qualityRange" class="quality-slider" min="1" max="100" value="56">
+    </div>
 
-    let controlBar = document.querySelector('.top-center-controls');
-    let hideTimeout;
-    //当鼠标移动到页面顶部中间位置时显示控制条
-    document.addEventListener('mousemove', function(event) {
-        if (event.clientY < 6) { // 顶部6px内为触发区域
-            controlBar.style.display = 'block';
-            clearTimeout(hideTimeout);
-        }
-    });
+    <!-- 全屏按钮 -->
+    <button class="fullscreen-btn" id="fullscreenBtn" title="全屏显示">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="7" height="2" rx="1" fill="white"/>
+          <rect x="3" y="3" width="2" height="7" rx="1" fill="white"/>
+          <rect x="14" y="3" width="7" height="2" rx="1" fill="white"/>
+          <rect x="19" y="3" width="2" height="7" rx="1" fill="white"/>
+          <rect x="3" y="19" width="7" height="2" rx="1" fill="white"/>
+          <rect x="3" y="14" width="2" height="7" rx="1" fill="white"/>
+          <rect x="14" y="19" width="7" height="2" rx="1" fill="white"/>
+          <rect x="19" y="14" width="2" height="7" rx="1" fill="white"/>
+        </svg>
+    </button>
 
-    // 当鼠标离开控制条时开始计时隐藏
-    controlBar.addEventListener('mouseleave', function() {
-        hideTimeout = setTimeout(function() {
-            controlBar.style.display = 'none';
-        }, 3000); // 3秒后隐藏
-    });
+    <!-- 屏幕画布 -->
+    <canvas id="screenCanvas"></canvas>
 
-    // 监听鼠标进入控制区域的事件
-    controlsDiv.addEventListener('mouseenter', function() {
-        isMouseOverControls = true;
-    });
+    <script src="/static/pako.min.js"></script>
+    <script>
+        const canvas = document.getElementById('screenCanvas');
+        const ctx = canvas.getContext('2d');
+        const wsPort = {{ .WebSocketPort }};
+        const wsUrl = `wss://${window.location.hostname}:${wsPort}/SimulateDesktop`;
+        const ws = new WebSocket(wsUrl);
+        ws.binaryType = 'arraybuffer';
 
-    // 监听鼠标离开控制区域的事件
-    controlsDiv.addEventListener('mouseleave', function() {
-        isMouseOverControls = false;
-    });
+        // DOM 元素
+        const switchScreenButton = document.getElementById('switchScreenButton');
+        const mouseControlCheckbox = document.getElementById('mouseControlCheckbox');
+        const qualityRange = document.getElementById('qualityRange');
+        const topControls = document.getElementById('topControls');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
 
+        // 状态变量
+        let isMouseControlEnabled = false;
+        let isConnected = false;
+        let lastImg = null;
+        let loadingAngle = 0;
+        let loadingTimer = null;
 
-    mouseControlCheckbox.addEventListener('change', function() {
-        isMouseControlEnabled = this.checked;
+        // 热区与控件hover控制显示
+        const topHotArea = document.getElementById('topHotArea');
+        let hotAreaHover = false;
+        let controlsHover = false;
 
-    });
-    switchScreenButton.addEventListener('click', function() {
-        const message = {
-            type: '9'
-        };
-        ws.send(JSON.stringify(message));
-    });
+        topHotArea.addEventListener('mouseenter', function() {
+            hotAreaHover = true;
+            topControls.classList.add('show');
+        });
+        topHotArea.addEventListener('mouseleave', function() {
+            hotAreaHover = false;
+            if (!controlsHover) topControls.classList.remove('show');
+        });
+        topControls.addEventListener('mouseenter', function() {
+            controlsHover = true;
+            topControls.classList.add('show');
+        });
+        topControls.addEventListener('mouseleave', function() {
+            controlsHover = false;
+            if (!hotAreaHover) topControls.classList.remove('show');
+        });
 
-    let isLongPress = false;
-    let longPressTimer = null;
-    const longPressThreshold = 96; // 长按的阈值，单位为毫秒
+        // 鼠标控制开关
+        mouseControlCheckbox.addEventListener('change', function() {
+            isMouseControlEnabled = this.checked;
+            this.parentElement.classList.toggle('active', this.checked);
+        });
 
-    document.addEventListener('mousedown', function(event) {
-        if (!isMouseControlEnabled) return;
-        if (isMouseOverControls) return;
-        // 启动定时器，检测长按
-        longPressTimer = setTimeout(function() {
-            isLongPress = true; // 设置长按标志
-            ws.send(JSON.stringify({ type: '5' })); // 发送长按开始的消息
-        }, longPressThreshold);
-    });
-
-    document.addEventListener('mouseup', function(event) {
-        if (!isMouseControlEnabled) return;
-
-        clearTimeout(longPressTimer); // 清除定时器
-
-        if (isLongPress) {
-            ws.send(JSON.stringify({ type: '6' })); // 发送长按结束的消息
-        } else {
-            ws.send(JSON.stringify({ type: '2' })); // 发送单击消息
-        }
-
-        isLongPress = false; // 重置长按标志
-    });
-
-    document.addEventListener('mousemove', function (event) {
-        if (!isMouseControlEnabled) return;
-        if (isMouseOverControls) return;
-        // 获取鼠标在浏览器窗口中的坐标
-        const clientX = event.clientX;
-        const clientY = event.clientY;
-        const canvasWidth = window.innerWidth;
-        const canvasHeight = window.innerHeight;
-
-        // 发送鼠标移动事件消息，附带画布尺寸
-        const message = {
-            type: '1',
-            absX: clientX,
-            absY: clientY,
-            canvasWidth: canvasWidth,
-            canvasHeight: canvasHeight
-        };
-        ws.send(JSON.stringify(message));
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (!isMouseControlEnabled) return;
-
-        if (event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
-            // 发送组合键事件
-            event.preventDefault();
-            const message = {
-                type: '8',
-                key: event.key,
-                modifiers: {
-                    ctrl: event.ctrlKey,
-                    alt: event.altKey,
-                    shift: event.shiftKey,
-                    meta: event.metaKey
-                }
-            };
+        // 屏幕切换
+        switchScreenButton.addEventListener('click', function() {
+            const message = { type: '9' };
             ws.send(JSON.stringify(message));
-        } else {
-            // 发送普通按键事件
-            const message = {
-                type: '3',
-                keyCode: event.key,
-            };
-            ws.send(JSON.stringify(message));
-        }
-    });
-    //监听右击事件
-    document.addEventListener('contextmenu', function (event) {
-        if (!isMouseControlEnabled) return;
-        event.preventDefault(); // 阻止默认的右键菜单弹出
-        const message = {
-            type: '4',
-        };
-        ws.send(JSON.stringify(message));
+            
+            // 添加点击反馈
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
 
-        // 可以根据需要执行其他操作
-    });
-    ws.onopen = function(event) {
-        sendSettings();
-    };
-    const qualityRange = document.getElementById('qualityRange');
+        // 画质调节
+        qualityRange.addEventListener('input', function() {
+            setQualitySliderGradient();
+            sendSettings();
+        });
 
-    function sendSettings() {
-        const quality = parseInt(qualityRange.value, 10);
-        const settingsMessage = {
-            type: 'updateSettings',
-            quality: quality,
-        };
-        ws.send(JSON.stringify(settingsMessage));
-    }
-    window.addEventListener("beforeunload", function(event) {
-        // 发送一个关闭消息到服务器
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: '10' }));
-        }
-        setTimeout(function() {
-            if (ws.readyState !== WebSocket.CLOSED) {
-                ws.close();
+        // 全屏功能
+        fullscreenBtn.addEventListener('click', function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
             }
-        }, 1000);  // 延时1秒关闭WebSocket连接
-    });
-    qualityRange.addEventListener('input', sendSettings);
-    document.addEventListener('wheel', function(event) {
-        if (!isMouseControlEnabled) return;
+        });
 
-        const deltaY = event.deltaY;
-        const scrollDirection = deltaY > 0 ? 'down' : 'up';
-        const scrollAmount = Math.abs(deltaY); // 可根据需要调整滚动量的计算方法
+        // 长按检测
+        let isLongPress = false;
+        let longPressTimer = null;
+        const longPressThreshold = 96;
 
-        const message = {
-            type: '7',
-            direction: scrollDirection,
-            amount: scrollAmount
+        document.addEventListener('mousedown', function(event) {
+            if (!isMouseControlEnabled) return;
+            
+            longPressTimer = setTimeout(function() {
+                isLongPress = true;
+                ws.send(JSON.stringify({ type: '5' }));
+            }, longPressThreshold);
+        });
+
+        document.addEventListener('mouseup', function(event) {
+            if (!isMouseControlEnabled) return;
+
+            clearTimeout(longPressTimer);
+
+            if (isLongPress) {
+                ws.send(JSON.stringify({ type: '6' }));
+            } else {
+                ws.send(JSON.stringify({ type: '2' }));
+            }
+
+            isLongPress = false;
+        });
+
+        // 鼠标移动
+        document.addEventListener('mousemove', function(event) {
+            if (!isMouseControlEnabled) return;
+            
+            const message = {
+                type: '1',
+                absX: event.clientX,
+                absY: event.clientY,
+                canvasWidth: window.innerWidth,
+                canvasHeight: window.innerHeight
+            };
+            ws.send(JSON.stringify(message));
+        });
+
+        // 键盘事件
+        document.addEventListener('keydown', function(event) {
+            if (!isMouseControlEnabled) return;
+
+            if (event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
+                event.preventDefault();
+                const message = {
+                    type: '8',
+                    key: event.key,
+                    modifiers: {
+                        ctrl: event.ctrlKey,
+                        alt: event.altKey,
+                        shift: event.shiftKey,
+                        meta: event.metaKey
+                    }
+                };
+                ws.send(JSON.stringify(message));
+            } else {
+                const message = {
+                    type: '3',
+                    keyCode: event.key,
+                };
+                ws.send(JSON.stringify(message));
+            }
+        });
+
+        // 右键事件
+        document.addEventListener('contextmenu', function(event) {
+            if (!isMouseControlEnabled) return;
+            event.preventDefault();
+            ws.send(JSON.stringify({ type: '4' }));
+        });
+
+        // 滚轮事件
+        document.addEventListener('wheel', function(event) {
+            if (!isMouseControlEnabled) return;
+
+            const deltaY = event.deltaY;
+            const scrollDirection = deltaY > 0 ? 'down' : 'up';
+            const scrollAmount = Math.abs(deltaY);
+
+            const message = {
+                type: '7',
+                direction: scrollDirection,
+                amount: scrollAmount
+            };
+            ws.send(JSON.stringify(message));
+        });
+
+        // WebSocket 事件处理
+        ws.onopen = function(event) {
+            isConnected = true;
+            statusDot.style.background = '#4CAF50';
+            statusText.textContent = '已连接';
+            sendSettings();
         };
-        ws.send(JSON.stringify(message));
-    });
 
+        ws.onclose = function(event) {
+            isConnected = false;
+            statusDot.style.background = '#f44336';
+            statusText.textContent = '连接断开';
+        };
 
-    ws.onmessage = function (event) {
-        if (event.data.size === 0) {
-            return; // 没有更新的数据，不重绘
+        ws.onerror = function(event) {
+            statusDot.style.background = '#ff9800';
+            statusText.textContent = '连接错误';
+        };
+
+        ws.onmessage = function(event) {
+            if (event.data.size === 0) return;
+            const inflatedData = pako.inflate(event.data);
+            const imgBlob = new Blob([inflatedData], { type: 'image/jpeg' });
+            const img = new Image();
+            img.onload = function() {
+                stopLoadingAnimation();
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                lastImg = img;
+            };
+            img.src = URL.createObjectURL(imgBlob);
+        };
+
+        // 设置发送函数
+        function sendSettings() {
+            const quality = parseInt(qualityRange.value, 10);
+            const settingsMessage = {
+                type: 'updateSettings',
+                quality: quality
+            };
+            ws.send(JSON.stringify(settingsMessage));
         }
-        const inflatedData = pako.inflate(event.data);
-        const imgBlob = new Blob([inflatedData], { type: 'image/jpeg' });
-        const img = new Image();
-        img.onload = function () {
+
+        // 页面卸载处理
+        window.addEventListener("beforeunload", function(event) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: '10' }));
+            }
+            setTimeout(function() {
+                if (ws.readyState !== WebSocket.CLOSED) {
+                    ws.close();
+                }
+            }, 1000);
+        });
+
+        // 窗口大小调整
+        window.addEventListener('resize', function() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ctx.imageSmoothingEnabled = false;
-            ctx.mozImageSmoothingEnabled = false;
-            ctx.webkitImageSmoothingEnabled = false;
-            ctx.msImageSmoothingEnabled = false;
+            if (lastImg) {
+                stopLoadingAnimation();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(lastImg, 0, 0, canvas.width, canvas.height);
+            } else {
+                drawLoadingAnimation();
+            }
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            setQualitySliderGradient();
+            drawLoadingAnimation();
+        });
+
+        function setQualitySliderGradient() {
+            const min = parseInt(qualityRange.min, 10);
+            const max = parseInt(qualityRange.max, 10);
+            const val = parseInt(qualityRange.value, 10);
+            const percent = ((val - min) / (max - min)) * 100;
+            const gradient = `linear-gradient(90deg, #667eea ${percent}%, #ddd ${percent}%)`;
+            qualityRange.style.setProperty('--slider-bg', gradient);
+        }
+
+        function drawLoadingAnimation() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        };
-        img.src = URL.createObjectURL(imgBlob);
-    };
-</script>
+            // 画转圈
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 32;
+            const lineWidth = 6;
+            const arcLength = Math.PI * 1.2;
+            ctx.save();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, loadingAngle, loadingAngle + arcLength, false);
+            ctx.stroke();
+            ctx.restore();
+            // 画文字
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('正在加载远程屏幕...', centerX, centerY + radius + 20);
+            // 更新角度
+            loadingAngle += 0.08;
+            if (loadingAngle > Math.PI * 2) loadingAngle -= Math.PI * 2;
+            loadingTimer = requestAnimationFrame(drawLoadingAnimation);
+        }
+
+        function stopLoadingAnimation() {
+            if (loadingTimer) cancelAnimationFrame(loadingTimer);
+            loadingTimer = null;
+        }
+    </script>
 </body>
 </html>
