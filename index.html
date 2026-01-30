@@ -50,6 +50,7 @@
             pointer-events: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 48px;
+            transform-origin: top center;
         }
         .top-controls.show {
             opacity: 1;
@@ -85,7 +86,7 @@
             position: relative;
             display: inline-block;
             width: 38px;
-            height: 22px;
+            height: 20px;
             vertical-align: middle;
         }
 
@@ -107,8 +108,10 @@
         .slider:before {
             position: absolute;
             content: '';
-            height: 16px; width: 16px;
-            left: 3px; bottom: 3px;
+            height: 18px; width: 18px;
+            left: 3px;
+            top: 50%;
+            transform: translateY(-50%);
             background: #fff;
             border-radius: 50%;
             box-shadow: 0 1px 4px rgba(102,126,234,0.10);
@@ -120,7 +123,7 @@
         }
 
         .switch input:checked + .slider:before {
-            transform: translateX(16px);
+            transform: translateX(16px) translateY(-50%);
             background: #667eea;
         }
 
@@ -132,11 +135,14 @@
         }
 
         .quality-slider {
+            -webkit-appearance: none;
+            appearance: none;
             width: 90px;
             height: 6px;
             border-radius: 3px;
-            background: none !important;
+            background: var(--slider-bg, linear-gradient(90deg, #667eea 50%, #ddd 50%));
             vertical-align: middle;
+            cursor: pointer;
         }
 
         .quality-slider::-webkit-slider-thumb {
@@ -145,7 +151,7 @@
             width: 16px; height: 16px;
             border-radius: 50%;
             background: #667eea;
-            border: 2px solid #fff;
+            border: 1px solid #fff;
             box-shadow: 0 1px 4px rgba(102,126,234,0.18);
             cursor: pointer;
             margin-top: -5px;
@@ -226,6 +232,7 @@
             z-index: 1000;
             font-size: 12px;
             color: #666;
+            transform-origin: top right;
         }
 
         .status-dot {
@@ -259,7 +266,8 @@
         /* 工具提示 */
         .tooltip {
             position: relative;
-            display: inline-block;
+            display: flex;
+            align-items: center;
         }
 
         .tooltip .tooltiptext {
@@ -289,11 +297,28 @@
             opacity: 1;
         }
 
+        /* 底部按钮容器 */
+        .bottom-buttons {
+            position: fixed;
+            bottom: 60px;
+            right: 60px;
+            display: flex;
+            flex-direction: row; /* 横向排列 */
+            gap: 12px;
+            z-index: 1000;
+            transform-origin: bottom right;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            opacity: 0.65;
+        }
+
+        /* 鼠标控制激活时：更透明且禁用点击 */
+        .bottom-buttons.mouse-control-active {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
         /* 全屏按钮 */
         .fullscreen-btn {
-            position: fixed;
-            bottom: 32px;
-            right: 32px;
             width: 54px;
             height: 54px;
             border-radius: 50%;
@@ -305,7 +330,6 @@
             justify-content: center;
             cursor: pointer;
             transition: background 0.2s, transform 0.18s, box-shadow 0.18s;
-            z-index: 1000;
         }
         .fullscreen-btn:hover {
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
@@ -316,6 +340,52 @@
             width: 26px;
             height: 26px;
             display: block;
+        }
+
+        /* CMD 按钮 */
+        .cmd-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            box-shadow: 0 4px 16px rgba(67,160,71,0.18);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.18s, box-shadow 0.18s;
+            font-size: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .cmd-btn:hover {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+            transform: scale(1.13);
+            box-shadow: 0 8px 24px rgba(67,160,71,0.28);
+        }
+
+        /* 日志按钮 */
+        .log-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            box-shadow: 0 4px 16px rgba(255,107,107,0.18);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.18s, box-shadow 0.18s;
+            font-size: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .log-btn:hover {
+            background: linear-gradient(135deg, #ee5a6f 0%, #ff6b6b 100%);
+            transform: scale(1.13);
+            box-shadow: 0 8px 24px rgba(255,107,107,0.28);
         }
 
         /* 顶部热区 */
@@ -329,9 +399,344 @@
             z-index: 999;
             background: transparent;
             pointer-events: auto;
+            transform-origin: top center;
         }
         @media (max-width: 480px) {
             #topHotArea { width: 98vw; }
+        }
+
+        /* 防止缩放的元素 */
+        .no-zoom {
+            transform-origin: inherit;
+        }
+
+        /* CMD 模态窗口 */
+        .cmd-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            pointer-events: none;
+        }
+        .cmd-modal.show {
+            display: block;
+        }
+
+        .cmd-window {
+            position: absolute;
+            background: #1e1e1e;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 900px;
+            height: 70%;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            pointer-events: auto;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .cmd-header {
+            background: #2d2d2d;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3d3d3d;
+            cursor: move;
+            user-select: none;
+        }
+
+        .cmd-title {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .cmd-close {
+            background: #f44336;
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+        .cmd-close:hover {
+            background: #d32f2f;
+        }
+
+        .cmd-output {
+            flex: 1;
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            padding: 16px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .cmd-input-area {
+            background: #2d2d2d;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #3d3d3d;
+        }
+
+        .cmd-input {
+            flex: 1;
+            background: #1e1e1e;
+            border: 1px solid #3d3d3d;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            outline: none;
+        }
+        .cmd-input:focus {
+            border-color: #43a047;
+        }
+
+        .cmd-send {
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .cmd-send:hover {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+        }
+
+        /* 日志模态窗口 */
+        .log-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            pointer-events: none;
+        }
+        .log-modal.show {
+            display: block;
+        }
+
+        .log-window {
+            position: absolute;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            width: 85%;
+            max-width: 1000px;
+            height: 75%;
+            max-height: 700px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            overflow: hidden;
+        }
+
+        .log-header {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f1f1 100%);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+            border-bottom: 2px solid rgba(33,150,243,0.1);
+        }
+
+        .log-title {
+            color: #1976d2;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .log-header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .log-close {
+            background: rgba(25,118,210,0.1);
+            border: none;
+            color: #1976d2;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .log-close:hover {
+            background: rgba(25,118,210,0.2);
+            transform: scale(1.1);
+        }
+
+        .log-content {
+            flex: 1;
+            background: #ffffff;
+            color: #2c3e50;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            padding: 20px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .log-content img {
+            max-width: 400px;
+            max-height: 300px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .log-content img:hover {
+            transform: scale(1.02);
+        }
+
+        .log-content::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .log-content::-webkit-scrollbar-track {
+            background: #f1f3f5;
+        }
+
+        .log-content::-webkit-scrollbar-thumb {
+            background: #90caf9;
+            border-radius: 5px;
+        }
+
+        .log-content::-webkit-scrollbar-thumb:hover {
+            background: #64b5f6;
+        }
+
+        .log-refresh {
+            background: rgba(25,118,210,0.08);
+            border: 1px solid rgba(25,118,210,0.2);
+            color: #1976d2;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .log-refresh:hover {
+            background: rgba(25,118,210,0.15);
+            transform: translateY(-1px);
+        }
+        .log-refresh:active {
+            transform: translateY(0);
+        }
+
+        .cmd-clear {
+            background: #ff9800;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .cmd-clear:hover {
+            background: #f57c00;
+        }
+
+        /* 图片预览模态窗口 */
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        .image-preview-modal.show {
+            display: flex;
+        }
+
+        .image-preview-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .image-preview-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+
+        .image-preview-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            line-height: 1;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3001;
+        }
+        .image-preview-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
         }
     </style>
 </head>
@@ -360,19 +765,70 @@
         <input type="range" id="qualityRange" class="quality-slider" min="1" max="100" value="56">
     </div>
 
-    <!-- 全屏按钮 -->
-    <button class="fullscreen-btn" id="fullscreenBtn" title="全屏显示">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="7" height="2" rx="1" fill="white"/>
-          <rect x="3" y="3" width="2" height="7" rx="1" fill="white"/>
-          <rect x="14" y="3" width="7" height="2" rx="1" fill="white"/>
-          <rect x="19" y="3" width="2" height="7" rx="1" fill="white"/>
-          <rect x="3" y="19" width="7" height="2" rx="1" fill="white"/>
-          <rect x="3" y="14" width="2" height="7" rx="1" fill="white"/>
-          <rect x="14" y="19" width="7" height="2" rx="1" fill="white"/>
-          <rect x="19" y="14" width="2" height="7" rx="1" fill="white"/>
-        </svg>
-    </button>
+    <!-- 底部按钮容器 -->
+    <div class="bottom-buttons" id="bottomButtons">
+        <!-- 日志按钮 -->
+        <button class="log-btn" id="logBtn" title="查看日志">
+            📋
+        </button>
+
+        <!-- CMD 按钮 -->
+        <button class="cmd-btn" id="cmdBtn" title="命令执行">
+            >_
+        </button>
+
+        <!-- 全屏按钮 -->
+        <button class="fullscreen-btn" id="fullscreenBtn" title="全屏显示">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="2" rx="1" fill="white"/>
+              <rect x="3" y="3" width="2" height="7" rx="1" fill="white"/>
+              <rect x="14" y="3" width="7" height="2" rx="1" fill="white"/>
+              <rect x="19" y="3" width="2" height="7" rx="1" fill="white"/>
+              <rect x="3" y="19" width="7" height="2" rx="1" fill="white"/>
+              <rect x="3" y="14" width="2" height="7" rx="1" fill="white"/>
+              <rect x="14" y="19" width="7" height="2" rx="1" fill="white"/>
+              <rect x="19" y="14" width="2" height="7" rx="1" fill="white"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- CMD 模态窗口 -->
+    <div class="cmd-modal" id="cmdModal">
+        <div class="cmd-window">
+            <div class="cmd-header">
+                <span class="cmd-title">CMD</span>
+                <button class="cmd-close" id="cmdClose">×</button>
+            </div>
+            <div class="cmd-output" id="cmdOutput">等待命令输入...</div>
+            <div class="cmd-input-area">
+                <input type="text" class="cmd-input" id="cmdInput" placeholder="输入命令">
+                <button class="cmd-send" id="cmdSend">执行</button>
+                <button class="cmd-clear" id="cmdClear">清空</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日志模态窗口 -->
+    <div class="log-modal" id="logModal">
+        <div class="log-window">
+            <div class="log-header">
+                <span class="log-title">📋 键盘记录日志</span>
+                <div class="log-header-buttons">
+                    <button class="log-refresh" id="logRefresh">🔄 刷新</button>
+                    <button class="log-close" id="logClose">×</button>
+                </div>
+            </div>
+            <div class="log-content" id="logContent">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 图片预览模态窗口 -->
+    <div class="image-preview-modal" id="imagePreviewModal">
+        <button class="image-preview-close" id="imagePreviewClose">×</button>
+        <div class="image-preview-content">
+            <img id="imagePreviewImg" src="" alt="预览">
+        </div>
+    </div>
 
     <!-- 屏幕画布 -->
     <canvas id="screenCanvas"></canvas>
@@ -392,6 +848,15 @@
         const qualityRange = document.getElementById('qualityRange');
         const topControls = document.getElementById('topControls');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const cmdBtn = document.getElementById('cmdBtn');
+        const cmdModal = document.getElementById('cmdModal');
+        const cmdClose = document.getElementById('cmdClose');
+        const cmdInput = document.getElementById('cmdInput');
+        const cmdSend = document.getElementById('cmdSend');
+        const cmdClear = document.getElementById('cmdClear');
+        const cmdOutput = document.getElementById('cmdOutput');
+        const bottomButtons = document.getElementById('bottomButtons');
+        const rightHotZone = document.getElementById('rightHotZone');
 
         // 状态变量
         let isMouseControlEnabled = false;
@@ -399,6 +864,12 @@
         let lastImg = null;
         let loadingAngle = 0;
         let loadingTimer = null;
+
+        // 鼠标移动节流相关变量
+        let lastMouseSendTime = 0;
+        const mouseSendInterval = 33; // 约30fps，每33ms发送一次
+        let lastSentX = -1;
+        let lastSentY = -1;
 
         // 热区与控件hover控制显示
         const topHotArea = document.getElementById('topHotArea');
@@ -408,25 +879,108 @@
         topHotArea.addEventListener('mouseenter', function() {
             hotAreaHover = true;
             topControls.classList.add('show');
+            updateTopControlsTransform(true);
         });
         topHotArea.addEventListener('mouseleave', function() {
             hotAreaHover = false;
-            if (!controlsHover) topControls.classList.remove('show');
+            if (!controlsHover) {
+                topControls.classList.remove('show');
+                updateTopControlsTransform(false);
+            }
         });
         topControls.addEventListener('mouseenter', function() {
             controlsHover = true;
             topControls.classList.add('show');
+            updateTopControlsTransform(true);
         });
         topControls.addEventListener('mouseleave', function() {
             controlsHover = false;
-            if (!hotAreaHover) topControls.classList.remove('show');
+            if (!hotAreaHover) {
+                topControls.classList.remove('show');
+                updateTopControlsTransform(false);
+            }
         });
+
+        // 更新顶部控制栏的 transform（考虑缩放补偿）
+        function updateTopControlsTransform(isVisible) {
+            const zoom = window.devicePixelRatio || 1;
+            const scale = 1 / zoom;
+            const translateY = isVisible ? '0' : '-20px';
+            topControls.style.transform = `translateX(-50%) translateY(${translateY}) scale(${scale})`;
+        }
 
         // 鼠标控制开关
         mouseControlCheckbox.addEventListener('change', function() {
             isMouseControlEnabled = this.checked;
             this.parentElement.classList.toggle('active', this.checked);
+
+            // 控制底部按钮的透明度和点击事件
+            if (this.checked) {
+                bottomButtons.classList.add('mouse-control-active');
+            } else {
+                bottomButtons.classList.remove('mouse-control-active');
+            }
         });
+
+        // 保存原始的鼠标控制状态（用于弹窗打开/关闭时恢复）
+        let savedMouseControlState = false;
+
+        // 暂停远程控制（弹窗打开时）
+        function pauseRemoteControl() {
+            savedMouseControlState = isMouseControlEnabled;
+            isMouseControlEnabled = false;
+            bottomButtons.classList.remove('mouse-control-active');
+        }
+
+        // 恢复远程控制（弹窗关闭时）
+        function resumeRemoteControl() {
+            isMouseControlEnabled = savedMouseControlState;
+            if (savedMouseControlState) {
+                bottomButtons.classList.add('mouse-control-active');
+            } else {
+                bottomButtons.classList.remove('mouse-control-active');
+            }
+        }
+
+        // 底部按钮收起/展开控制
+        let bottomButtonsCollapsed = false;
+
+        // 底部按钮缩放补偿（不受浏览器缩放影响）
+        function updateBottomButtonsScale() {
+            // 使用 visualViewport 获取准确的缩放比例
+            let zoom = 1;
+            if (window.visualViewport) {
+                zoom = window.visualViewport.scale;
+            } else {
+                // 降级方案：使用 devicePixelRatio
+                zoom = window.devicePixelRatio || 1;
+            }
+
+            const scale = 1 / zoom;
+
+            // 应用缩放变换，保持按钮大小不变
+            bottomButtons.style.transform = `scale(${scale})`;
+            bottomButtons.style.transformOrigin = 'bottom right';
+
+            // 调整位置补偿，确保按钮位置不受缩放影响
+            // 由于 scale 会影响元素占据的空间，需要调整 bottom 和 right
+            const baseBottom = 60;
+            const baseRight = 60;
+            bottomButtons.style.bottom = `${baseBottom}px`;
+            bottomButtons.style.right = `${baseRight}px`;
+        }
+
+        // 初始化底部按钮缩放
+        updateBottomButtonsScale();
+
+        // 监听窗口大小变化（包括缩放）
+        window.addEventListener('resize', updateBottomButtonsScale);
+
+        // 如果支持 visualViewport，也监听它的变化
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateBottomButtonsScale);
+            window.visualViewport.addEventListener('scroll', updateBottomButtonsScale);
+        }
 
         // 屏幕切换
         switchScreenButton.addEventListener('click', function() {
@@ -454,6 +1008,309 @@
                 document.exitFullscreen();
             }
         });
+
+        // CMD 窗口控制
+        cmdBtn.addEventListener('click', function() {
+            pauseRemoteControl(); // 暂停远程控制
+            cmdModal.classList.add('show');
+            cmdInput.focus();
+        });
+
+        cmdClose.addEventListener('click', function() {
+            cmdModal.classList.remove('show');
+            resumeRemoteControl(); // 恢复远程控制
+        });
+
+        // 移除点击背景关闭功能（因为没有背景了）
+
+        // CMD 窗口拖拽功能
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        const cmdWindow = document.querySelector('.cmd-window');
+        const cmdHeader = document.querySelector('.cmd-header');
+
+        cmdHeader.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            if (e.target === cmdHeader || cmdHeader.contains(e.target)) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, cmdWindow);
+            }
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            const zoom = window.devicePixelRatio || 1;
+            const scale = 1 / zoom;
+            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px)) scale(${scale})`;
+        }
+
+        // 发送命令
+        function sendCommand() {
+            const command = cmdInput.value.trim();
+            if (!command) return;
+
+            // 显示发送的命令
+            appendOutput(`> ${command}\n`, '#00bfff');
+
+            // 发送到服务器
+            const message = {
+                type: '11',
+                command: command
+            };
+            ws.send(JSON.stringify(message));
+
+            // 清空输入框
+            cmdInput.value = '';
+        }
+
+        cmdSend.addEventListener('click', sendCommand);
+
+        // 回车发送命令
+        cmdInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendCommand();
+            }
+        });
+
+        // 清空输出
+        cmdClear.addEventListener('click', function() {
+            cmdOutput.textContent = '等待命令输入...';
+        });
+
+        // 日志窗口控制
+        const logBtn = document.getElementById('logBtn');
+        const logModal = document.getElementById('logModal');
+        const logClose = document.getElementById('logClose');
+        const logRefresh = document.getElementById('logRefresh');
+        const logContent = document.getElementById('logContent');
+        const logWindow = document.querySelector('.log-window');
+        const logHeader = document.querySelector('.log-header');
+
+        // 日志窗口拖拽变量
+        let isLogDragging = false;
+        let logCurrentX;
+        let logCurrentY;
+        let logInitialX;
+        let logInitialY;
+        let logXOffset = 0;
+        let logYOffset = 0;
+
+        // 打开日志窗口
+        logBtn.addEventListener('click', function() {
+            pauseRemoteControl(); // 暂停远程控制
+            logModal.classList.add('show');
+            loadLog();
+        });
+
+        // 关闭日志窗口
+        logClose.addEventListener('click', function() {
+            logModal.classList.remove('show');
+            resumeRemoteControl(); // 恢复远程控制
+        });
+
+        // 刷新日志
+        logRefresh.addEventListener('click', function() {
+            loadLog();
+        });
+
+        // 日志窗口拖拽
+        logHeader.addEventListener('mousedown', logDragStart);
+        document.addEventListener('mousemove', logDrag);
+        document.addEventListener('mouseup', logDragEnd);
+
+        function logDragStart(e) {
+            // 如果点击的是刷新或关闭按钮，不触发拖拽
+            if (e.target === logRefresh || e.target === logClose) {
+                return;
+            }
+
+            logInitialX = e.clientX - logXOffset;
+            logInitialY = e.clientY - logYOffset;
+
+            if (e.target === logHeader || logHeader.contains(e.target)) {
+                isLogDragging = true;
+            }
+        }
+
+        function logDrag(e) {
+            if (isLogDragging) {
+                e.preventDefault();
+                logCurrentX = e.clientX - logInitialX;
+                logCurrentY = e.clientY - logInitialY;
+
+                logXOffset = logCurrentX;
+                logYOffset = logCurrentY;
+
+                setLogTranslate(logCurrentX, logCurrentY, logWindow);
+            }
+        }
+
+        function logDragEnd(e) {
+            logInitialX = logCurrentX;
+            logInitialY = logCurrentY;
+            isLogDragging = false;
+        }
+
+        function setLogTranslate(xPos, yPos, el) {
+            const zoom = window.devicePixelRatio || 1;
+            const scale = 1 / zoom;
+            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px)) scale(${scale})`;
+        }
+
+        // 加载日志内容
+        function loadLog() {
+            logContent.textContent = '加载中...';
+
+            // 发送请求获取日志
+            const message = {
+                type: '12',
+                action: 'getLog'
+            };
+            ws.send(JSON.stringify(message));
+        }
+
+        // 处理日志内容，将截屏路径转换为图片
+        function processLogContent(content) {
+            // 清空内容
+            logContent.innerHTML = '';
+
+            // 匹配截屏路径的正则表达式
+            const screenshotRegex = /\[截屏:(.*?\.png)\]/g;
+
+            let lastIndex = 0;
+            let match;
+
+            while ((match = screenshotRegex.exec(content)) !== null) {
+                // 添加匹配前的文本
+                if (match.index > lastIndex) {
+                    const textNode = document.createTextNode(content.substring(lastIndex, match.index));
+                    logContent.appendChild(textNode);
+                }
+
+                // 创建图片元素
+                const imgWrapper = document.createElement('div');
+                imgWrapper.style.margin = '10px 0';
+
+                const img = document.createElement('img');
+                const imagePath = match[1];
+
+                // 将 Windows 路径转换为 URL 路径
+                // 需要通过服务器提供图片访问
+                const imgSrc = '/screenshot?path=' + encodeURIComponent(imagePath);
+                img.src = imgSrc;
+                img.alt = '截屏';
+                img.title = '点击查看大图';
+
+                // 添加点击事件，显示大图
+                img.onclick = function() {
+                    showImagePreview(imgSrc);
+                };
+
+                img.onerror = function() {
+                    // 如果图片加载失败，显示路径
+                    const errorText = document.createTextNode('[截屏:' + imagePath + ']');
+                    imgWrapper.appendChild(errorText);
+                    img.remove();
+                };
+
+                imgWrapper.appendChild(img);
+                logContent.appendChild(imgWrapper);
+
+                lastIndex = screenshotRegex.lastIndex;
+            }
+
+            // 添加剩余的文本
+            if (lastIndex < content.length) {
+                const textNode = document.createTextNode(content.substring(lastIndex));
+                logContent.appendChild(textNode);
+            }
+        }
+
+        // 显示图片预览
+        function showImagePreview(imageSrc) {
+            const imagePreviewModal = document.getElementById('imagePreviewModal');
+            const imagePreviewImg = document.getElementById('imagePreviewImg');
+
+            imagePreviewImg.src = imageSrc;
+            imagePreviewModal.classList.add('show');
+        }
+
+        // 关闭图片预览
+        function closeImagePreview() {
+            const imagePreviewModal = document.getElementById('imagePreviewModal');
+            imagePreviewModal.classList.remove('show');
+        }
+
+        // 图片预览事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            const imagePreviewModal = document.getElementById('imagePreviewModal');
+            const imagePreviewClose = document.getElementById('imagePreviewClose');
+
+            // 点击关闭按钮
+            if (imagePreviewClose) {
+                imagePreviewClose.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeImagePreview();
+                });
+            }
+
+            // 点击背景关闭
+            if (imagePreviewModal) {
+                imagePreviewModal.addEventListener('click', function(e) {
+                    if (e.target === imagePreviewModal) {
+                        closeImagePreview();
+                    }
+                });
+            }
+
+            // ESC 键关闭
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && imagePreviewModal.classList.contains('show')) {
+                    closeImagePreview();
+                }
+            });
+        });
+
+        // 添加输出到 CMD 窗口
+        function appendOutput(text, color = '#00ff00') {
+            if (cmdOutput.textContent === '等待命令输入...') {
+                cmdOutput.textContent = '';
+            }
+            const span = document.createElement('span');
+            span.style.color = color;
+            span.textContent = text;
+            cmdOutput.appendChild(span);
+            cmdOutput.scrollTop = cmdOutput.scrollHeight;
+        }
 
         // 长按检测
         let isLongPress = false;
@@ -483,16 +1340,47 @@
             isLongPress = false;
         });
 
-        // 鼠标移动
+        // 鼠标移动（带节流）
         document.addEventListener('mousemove', function(event) {
             if (!isMouseControlEnabled) return;
-            
+            if (!lastImg) return; // 确保有图像
+
+            // 节流检查：限制发送频率
+            const now = Date.now();
+            if (now - lastMouseSendTime < mouseSendInterval) return;
+
+            // 获取canvas的边界矩形
+            const rect = canvas.getBoundingClientRect();
+
+            // 计算相对于canvas显示区域的坐标
+            const displayX = event.clientX - rect.left;
+            const displayY = event.clientY - rect.top;
+
+            // 计算相对位置（0.0 到 1.0）
+            const relativeX = displayX / rect.width;
+            const relativeY = displayY / rect.height;
+
+            // 转换为实际图像坐标（屏幕分辨率）
+            const imageX = relativeX * lastImg.naturalWidth;
+            const imageY = relativeY * lastImg.naturalHeight;
+
+            // 坐标变化检测：避免发送重复坐标
+            const roundedX = Math.round(imageX);
+            const roundedY = Math.round(imageY);
+            if (roundedX === lastSentX && roundedY === lastSentY) return;
+
+            // 更新节流状态
+            lastSentX = roundedX;
+            lastSentY = roundedY;
+            lastMouseSendTime = now;
+
+            // 发送实际图像坐标和实际图像尺寸
             const message = {
                 type: '1',
-                absX: event.clientX,
-                absY: event.clientY,
-                canvasWidth: window.innerWidth,
-                canvasHeight: window.innerHeight
+                absX: imageX,
+                absY: imageY,
+                canvasWidth: lastImg.naturalWidth,
+                canvasHeight: lastImg.naturalHeight
             };
             ws.send(JSON.stringify(message));
         });
@@ -501,7 +1389,15 @@
         document.addEventListener('keydown', function(event) {
             if (!isMouseControlEnabled) return;
 
-            if (event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
+            // 检查是否是可打印字符（长度为1的字符串）
+            const isPrintableChar = event.key.length === 1;
+
+            // 检查是否是真正的组合键（Ctrl/Alt/Meta + 任意键，或 Shift + 非字符键）
+            const isRealCombo = (event.ctrlKey || event.altKey || event.metaKey) ||
+                               (event.shiftKey && !isPrintableChar);
+
+            if (isRealCombo) {
+                // 真正的组合键：Ctrl+A, Alt+Tab, Shift+Tab, Shift+方向键等
                 event.preventDefault();
                 const message = {
                     type: '8',
@@ -515,6 +1411,7 @@
                 };
                 ws.send(JSON.stringify(message));
             } else {
+                // 普通字符输入（包括 Shift+字符产生的符号，如 ?、!、@ 等）
                 const message = {
                     type: '3',
                     keyCode: event.key,
@@ -566,6 +1463,29 @@
         };
 
         ws.onmessage = function(event) {
+            // 处理文本消息（命令输出）
+            if (typeof event.data === 'string') {
+                try {
+                    const response = JSON.parse(event.data);
+                    if (response.type === 'cmdOutput') {
+                        appendOutput(response.output, '#00ff00');
+                    } else if (response.type === 'cmdError') {
+                        appendOutput(response.error, '#ff5555');
+                    } else if (response.type === 'logContent') {
+                        // 处理并显示日志内容
+                        if (response.content) {
+                            processLogContent(response.content);
+                        } else {
+                            logContent.textContent = '暂无日志记录';
+                        }
+                    }
+                } catch (e) {
+                    // 不是 JSON，可能是其他文本消息
+                }
+                return;
+            }
+
+            // 处理二进制消息（屏幕截图）
             if (event.data.size === 0) return;
             const inflatedData = pako.inflate(event.data);
             const imgBlob = new Blob([inflatedData], { type: 'image/jpeg' });
@@ -603,25 +1523,73 @@
             }, 1000);
         });
 
-        // 窗口大小调整
-        window.addEventListener('resize', function() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (lastImg) {
-                stopLoadingAnimation();
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(lastImg, 0, 0, canvas.width, canvas.height);
-            } else {
-                drawLoadingAnimation();
-            }
-        });
-
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             setQualitySliderGradient();
             drawLoadingAnimation();
+            updateZoomCompensation();
+        });
+
+        // 浏览器缩放补偿 - 保持UI元素固定大小
+        function updateZoomCompensation() {
+            // 获取浏览器缩放级别
+            const zoom = window.devicePixelRatio || 1;
+            const scale = 1 / zoom;
+
+            // 需要保持固定大小的元素
+            const elements = [
+                { el: document.getElementById('topHotArea'), origin: 'top center' },
+                { el: document.getElementById('topControls'), origin: 'top center' },
+                { el: document.querySelector('.status-indicator'), origin: 'top right' },
+                { el: document.querySelector('.bottom-buttons'), origin: 'bottom right' },
+                { el: document.querySelector('.cmd-window'), origin: 'center' },
+                { el: document.querySelector('.log-window'), origin: 'center' }
+            ];
+
+            elements.forEach(item => {
+                if (item.el) {
+                    // 保存原有的 transform
+                    const currentTransform = window.getComputedStyle(item.el).transform;
+
+                    // 应用缩放补偿
+                    if (item.el.id === 'topControls') {
+                        // 顶部控制栏需要特殊处理，保持其显示/隐藏的 transform
+                        const isVisible = item.el.classList.contains('show');
+                        const translateY = isVisible ? '0' : '-20px';
+                        item.el.style.transform = `translateX(-50%) translateY(${translateY}) scale(${scale})`;
+                    } else if (item.el.id === 'topHotArea') {
+                        item.el.style.transform = `translateX(-50%) scale(${scale})`;
+                    } else if (item.el.classList.contains('cmd-window')) {
+                        // CMD 窗口需要保持拖拽偏移
+                        setTranslate(xOffset, yOffset, item.el);
+                    } else if (item.el.classList.contains('log-window')) {
+                        // 日志窗口需要保持拖拽偏移
+                        setLogTranslate(logXOffset, logYOffset, item.el);
+                    } else {
+                        item.el.style.transform = `scale(${scale})`;
+                    }
+                }
+            });
+        }
+
+        // 监听窗口大小变化（包括缩放）
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                if (lastImg) {
+                    stopLoadingAnimation();
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(lastImg, 0, 0, canvas.width, canvas.height);
+                } else {
+                    drawLoadingAnimation();
+                }
+                updateZoomCompensation();
+            }, 100);
         });
 
         function setQualitySliderGradient() {
